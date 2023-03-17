@@ -19,6 +19,15 @@ body {
   margin-bottom: 16px;
 }
 
-.country-list {
+.country-list,
+.country-info {
+  list-style: none;
+}
+
+.country {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20;
   list-style: none;
 }

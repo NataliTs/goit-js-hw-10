@@ -1,6 +1,7 @@
 import './css/styles.css';
 import debounce from 'lodash.debounce';
 import { getData } from './fetchCountries';
+import Notiflix from 'notiflix';
 
 const DEBOUNCE_DELAY = 300;
 
@@ -13,16 +14,17 @@ const refs = {
   infoCountry: document.querySelector('.country-info'),
 };
 
-const renderinfoCountry = () => {
+const renderInfoCountry = () => {
   const infoCountry = countries
     .map(
-      country => `<li><img src="${country.flags.svg}" alt="${
+      country => `<li>
+      <div class="country"><img src="${country.flags.svg}" alt="${
         country.flags.alt
-      }" width="30" height="20"/>
-      <p>${country.name.official}</p>
-      <p><b>Capital</b>${country.capital}</p>
-      <p><b>Population</b>${country.population}</p>
-      <p><b>Languages</b>${Object.values(country.languages)}</p>
+      }" width="40" height="30"/>
+      <p><b>${country.name.official}</b></p></div>
+      <p><b>Capital:</b> ${country.capital}</p>
+      <p><b>Population:</b> ${country.population}</p>
+      <p><b>Languages:</b> ${Object.values(country.languages)}</p>
       </li>`
     )
     .join('');
@@ -34,12 +36,11 @@ const renderinfoCountry = () => {
 const renderListCountry = () => {
   const listCountry = countries
     .map(
-      country => `<li><img src="${country.flags.svg}" alt="${country.flags.alt}" width="30" height="20"/>
-      <p>${country.name.official}</p></li>`
+      country => `<li><div class="country"><img src="${country.flags.svg}" alt="${country.flags.alt}" width="30" height="20"/>
+      <p>${country.name.official}</p></div></li>`
     )
     .join('');
 
-  refs.listCountry.innerHTML = '';
   refs.listCountry.insertAdjacentHTML('beforeend', listCountry);
 };
 
@@ -47,7 +48,17 @@ const fetchCountries = () => {
   getData(searchName)
     .then(data => {
       countries = data;
-      renderListCountry();
+      if (countries.length > 10) {
+        Notiflix.Notify.info(
+          'Too many matches found. Please enter a more specific name.'
+        );
+      } else if (countries.length === 0) {
+        Notiflix.Notify.failure('Oops, there is no country with that name');
+      } else if (countries.length >= 2 && countries.length <= 10) {
+        renderListCountry();
+      } else if (countries.length === 1) {
+        renderInfoCountry();
+      }
       console.log(data);
     })
     .catch(error => console.log('error:', error));
@@ -55,13 +66,22 @@ const fetchCountries = () => {
 
 const onInputSearch = e => {
   searchName = refs.searchCountry.value.trim();
-  console.log(searchName);
-  fetchCountries(searchName);
+
+  if (searchName !== '') {
+    fetchCountries(searchName);
+    console.log(searchName);
+  }
 };
 
 refs.searchCountry.addEventListener(
   'input',
-  debounce(() => {
+  debounce(e => {
+    clearHTML();
     onInputSearch();
   }, DEBOUNCE_DELAY)
 );
+
+const clearHTML = () => {
+  refs.infoCountry.innerHTML = '';
+  refs.listCountry.innerHTML = '';
+};
